@@ -14,6 +14,7 @@ class Task:
     category: str
     frequency: str = "once"   # "once" | "daily" | "weekly" | "monthly"
     completed: bool = False
+    time: str = "08:00"       # scheduled start time in "HH:MM" format
 
     def update_priority(self, new_priority: str) -> None:
         """Set a new priority level for this task."""
@@ -132,6 +133,63 @@ class Scheduler:
         sorted_tasks = self.sort_tasks_by_priority()
         self.daily_plan = self.filter_tasks_by_time(sorted_tasks)
         self.explanation = self.build_explanation()
+
+    @staticmethod
+    def _to_minutes(time_str: str) -> int:
+        """Convert a 'HH:MM' time string to total minutes since midnight.
+
+        Used internally to turn start times into plain integers so that
+        overlap arithmetic (start + duration) works without datetime objects.
+
+        Args:
+            time_str: A zero-padded time string, e.g. '08:30' or '14:00'.
+
+        Returns:
+            Integer total minutes since midnight, e.g. '08:30' -> 510.
+        """
+
+        h, m = (int(x) for x in time_str.split(":"))
+        return h * 60 + m
+
+    def detect_conflicts(self) -> list[str]:
+        """Return warning messages for any tasks whose time windows overlap.
+
+        Two tasks conflict when one starts before the other has finished,
+        regardless of whether they belong to the same pet or different pets.
+        Returns an empty list if no conflicts are found.
+        """
+
+        warnings = []
+        for i, a in enumerate(self.tasks):
+            for b in self.tasks[i + 1:]:
+                a_start = self._to_minutes(a.time)
+                b_start = self._to_minutes(b.time)
+
+                # get task end times
+                a_end = a_start + a.duration
+                b_end = b_start + b.duration
+
+                # handle conflict
+                if a_start < b_end and b_start < a_end:
+                    warnings.append(
+                        f"WARNING: '{a.name}' ({a.time}, {a.duration} min) "
+                        f"conflicts with '{b.name}' ({b.time}, {b.duration} min)."
+                    )
+
+        return warnings
+
+    def filter_tasks_by_status(self, completed: bool) -> list[Task]:
+        """Return tasks matching the given completion status.
+
+        Pass completed=True to get finished tasks, False for pending ones.
+        """
+
+        return [t for t in self.tasks if t.completed == completed]
+
+    def sort_tasks_by_time(self) -> list[Task]:
+        """Return tasks sorted by scheduled start time (earliest first)."""
+
+        return sorted(self.tasks, key=lambda t: tuple(int(x) for x in t.time.split(":")))
 
     def sort_tasks_by_priority(self) -> list[Task]:
         """Return tasks sorted from highest to lowest priority."""

@@ -41,3 +41,40 @@ pip install -r requirements.txt
 5. Add tests to verify key behaviors.
 6. Connect your logic to the Streamlit UI in `app.py`.
 7. Refine UML so it matches what you actually built.
+
+## Smarter Scheduling
+
+The newly added features are as follows:
+
+### `sort_tasks_by_time()`
+Sorts all tasks by their scheduled start time, earliest first. Each task's `time` field (`"HH:MM"`) is converted into an `(hour, minute)` tuple so times compare chronologically, not as plain strings.
+
+```python
+scheduler.sort_tasks_by_time()
+# → [Morning Walk 07:00, Litter Box 07:10, Brushing 10:00, ...]
+```
+
+### `filter_tasks_by_status(completed: bool)`
+Returns only the tasks that match the given completion state — pending or done. Useful for showing what still needs to be done vs. what has already been completed today.
+
+```python
+scheduler.filter_tasks_by_status(completed=False)  # pending tasks
+scheduler.filter_tasks_by_status(completed=True)   # finished tasks
+```
+
+### `detect_conflicts()`
+Checks every unique pair of tasks for overlapping time windows using the interval overlap formula:
+
+```
+conflict  when  A.start < B.end  AND  B.start < A.end
+```
+
+Returns a list of warning strings — one per conflicting pair. Returns an empty list if the schedule is clean. Works across tasks from the same pet or different pets.
+
+```python
+for msg in scheduler.detect_conflicts():
+    print(msg)
+# WARNING: 'Morning Walk' (07:00, 20 min) conflicts with 'Litter Box' (07:10, 10 min).
+```
+
+A private helper `_to_minutes(time_str)` converts `"HH:MM"` to total minutes since midnight so that start/end arithmetic stays simple integer math.
