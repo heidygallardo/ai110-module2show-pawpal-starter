@@ -78,3 +78,19 @@ for msg in scheduler.detect_conflicts():
 ```
 
 A private helper `_to_minutes(time_str)` converts `"HH:MM"` to total minutes since midnight so that start/end arithmetic stays simple integer math.
+
+## Testing PawPal+
+
+```bash
+python -m pytest tests/test_pawpal.py -v
+```
+The test suite covers:
+
+- Task state — mark_complete() correctly flips a task's status from incomplete to complete
+- Pet task management — adding a task to a Pet increases its task count
+- Chronological sorting — sort_tasks_by_time() returns tasks ordered earliest to latest regardless of insertion order
+- Status filtering — filter_tasks_by_status(completed=False) returns only pending tasks and excludes completed ones
+- Conflict detection — detect_conflicts() flags two tasks that share the same start time as a scheduling conflict
+
+My confidence Level in the system's reliability is 2 stars out of 5,
+since I need to add more tests.
