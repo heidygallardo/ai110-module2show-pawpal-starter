@@ -12,8 +12,8 @@ class Task:
     """A single pet care activity."""
 
     name: str
-    duration: int  # minutes
-    time: str
+    duration: int  # minutes the task takes — drives scheduling
+    time: str  # preferred time of day (label / soft preference, not a hard constraint)
     priority: int
     category: str
     is_complete: bool = False
@@ -35,7 +35,6 @@ class Pet:
     species: str
     age: int
     medical_conditions: list[str] = field(default_factory=list)
-    preferences: dict = field(default_factory=dict)
     tasks: list[Task] = field(default_factory=list)
 
     def add_task(self, task: Task) -> None:
@@ -61,7 +60,7 @@ class Owner:
 
     name: str
     phone_number: str
-    availability: str
+    availability: int  # total time available, in minutes
     preferences: dict = field(default_factory=dict)
     pets: list[Pet] = field(default_factory=list)
 
@@ -87,18 +86,42 @@ class Owner:
 
 
 class Scheduler:
-    """Builds a daily care plan from a pet's tasks and time constraints."""
+    """Builds a daily care plan from tasks, availability, and constraints.
 
-    def generate_plan(self, pet: Pet, available_time: int) -> list[Task]:
-        """Produce a daily care plan for a pet within the available time."""
+    The scheduler is configured with everything it needs up front, then
+    `generate_plan()` produces and stores the plan so `explain_plan()` can
+    describe it without extra arguments.
+    """
+
+    def __init__(
+        self,
+        tasks: list[Task],
+        availability: int,
+        preferences: dict | None = None,
+    ):
+        self.tasks = tasks
+        self.availability = availability  # total time available, in minutes
+        self.preferences = preferences or {}
+        self.plan: list[Task] = []
+        self.explanation: str = ""
+
+    def generate_plan(self) -> list[Task]:
+        """Build the daily care plan from self.tasks within self.availability.
+
+        Stores the result in self.plan and the reasoning in self.explanation.
+        """
         pass
 
     def organize_by_priority(self, tasks: list[Task]) -> list[Task]:
-        """Sort tasks by priority."""
+        """Sort tasks by priority (highest priority first)."""
         pass
 
-    def filter_to_constraints(self, tasks: list[Task], available_time: int) -> list[Task]:
-        """Filter tasks so they fit within the available time."""
+    def filter_to_constraints(self, tasks: list[Task]) -> list[Task]:
+        """Drop completed tasks and trim by duration to fit self.availability.
+
+        Tasks are included until their total duration reaches the available
+        time budget; a task's `time` is not treated as a hard constraint.
+        """
         pass
 
     def explain_plan(self) -> str:

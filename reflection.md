@@ -39,6 +39,9 @@ classes included:
 - Did your design change during implementation?
 - If yes, describe at least one change and why you made it.
 
+- Updated the Scheduler class, since the AI-generate UML diagram had added another class. 
+- Updated data type for 'availability' to integer.
+
 ---
 
 ## 2. Scheduling Logic and Tradeoffs

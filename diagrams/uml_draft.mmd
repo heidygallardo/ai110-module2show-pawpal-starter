@@ -2,7 +2,7 @@ classDiagram
     class Owner {
         -String name
         -String phoneNumber
-        -String availability
+        -int availability
         -Map preferences
         +addPet(pet) void
         +editPet(pet) void
@@ -16,7 +16,6 @@ classDiagram
         -String species
         -int age
         -List~String~ medicalConditions
-        -Map preferences
         +addTask(task) void
         +editTask(task) void
         +removeTask(task) void
@@ -35,13 +34,17 @@ classDiagram
     }
 
     class Scheduler {
-        +generatePlan(pet, availableTime) Schedule
+        -List~Task~ tasks
+        -int availability
+        -Map preferences
+        -List~Task~ plan
+        -String explanation
+        +generatePlan() List~Task~
         +organizeByPriority(tasks) List~Task~
-        +filterToConstraints(tasks, availableTime) List~Task~
+        +filterToConstraints(tasks) List~Task~
         +explainPlan() String
     }
 
     Owner "1" *-- "0..*" Pet : owns
     Pet "1" *-- "0..*" Task : has
-    Scheduler ..> Task : reads
-    Scheduler ..> Pet : schedules for
+    Scheduler "1" o-- "0..*" Task : schedules
