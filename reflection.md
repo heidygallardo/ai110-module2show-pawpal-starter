@@ -2,10 +2,37 @@
 
 ## 1. System Design
 
+A user should be able to:
+1. add a pet
+2. add a task 
+3. edit a task 
+
 **a. Initial design**
 
 - Briefly describe your initial UML design.
 - What classes did you include, and what responsibilities did you assign to each?
+
+classes included:
+1. Owner
+    - Stores owner information (name, phone number, availability, preferences)
+    - Manages pets (add, edit, remove, view)
+    - Can view all pets and all tasks across pets
+
+2. Pet 
+    - Stores pet info (name, species, age, medical conditions, preferences)
+    - manages tasks for that pet (add, edit, remove, view tasks)
+
+3. Task
+    - Respresents a single pet care activity
+    - stores task details (name, duration, time, priority, category, completion status)
+    - allow updating task details or marking the task complete
+
+4. Scheduler
+    - Generates the daily care plan
+    - Organizes tasks based on priority and available time
+    - Filters tasks to fit constraints
+    - Produces the schedule and explanation of the plan
+
 
 **b. Design changes**
 
