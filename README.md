@@ -45,6 +45,7 @@ pip install -r requirements.txt
 ## 🖥️ Sample Output
 
 Paste a sample of your app's CLI or Streamlit output here so a reader can see what a generated plan looks like:
+![Sample Output](image.png)
 
 ```
 # e.g.:
