@@ -73,14 +73,12 @@ Sample test output:
 
 ## 📐 Smarter Scheduling
 
-> Fill in once you've implemented scheduling logic.
-
 | Feature | Method(s) | Notes |
 |---------|-----------|-------|
-| Task sorting | | e.g., by priority, duration |
-| Filtering | | e.g., skip tasks if time runs out |
-| Conflict handling | | e.g., overlapping time slots |
-| Recurring tasks | | e.g., daily vs. weekly |
+| Task sorting | `Scheduler.sort_by_time()`, `Scheduler.organize_by_priority()` | `sort_by_time()` uses a lambda as the sort `key` on the task's `"HH:MM"` time string; zero-padded 24-hour times sort chronologically as plain strings (`"08:00" < "14:00"`). `organize_by_priority()` sorts by priority (lower number = higher). |
+| Filtering | `Scheduler.filter_by_pet()`, `Scheduler.filter_to_constraints()` | `filter_by_pet()` keeps only the tasks for a given pet name via the `pet_by_task` map. `filter_to_constraints()` drops completed tasks and greedily includes tasks while they fit the remaining time budget. |
+| Conflict handling | `Scheduler.detect_conflicts()` | Lightweight O(n) pass that buckets tasks by `time`; any slot with more than one task is flagged (same pet **or** different pets, since the owner can only be one place at once). Returns a list of warning strings and never raises — empty list means no conflicts. |
+| Recurring tasks | `Task.next_occurrence()`, `Pet.complete_task()` | A task carries `recurrence` (`"none"`/`"daily"`/`"weekly"`) and a `due_date`. `next_occurrence()` returns a fresh, incomplete copy with the due date advanced via `timedelta` (handles month/year/leap-year rollovers). `complete_task()` marks a task done and appends its next occurrence to the pet's list. |
 
 ## 📸 Demo Walkthrough
 

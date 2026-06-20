@@ -53,8 +53,8 @@ classes included:
 
 **b. Tradeoffs**
 
-- Describe one tradeoff your scheduler makes.
-- Why is that tradeoff reasonable for this scenario?
+- One tradeoff my scheduler makes is that when detecting conflicts it only detects when times match, rather than when there is an overlap in times. 
+- This tradeoff is reasonable scenarios where multiple pets are tasked for the same thing such as different pets being fed at the same time. 
 
 ---
 

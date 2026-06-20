@@ -5,6 +5,7 @@ Method bodies are left as stubs to be implemented.
 """
 
 from dataclasses import dataclass, field
+from datetime import date, timedelta
 
 
 @dataclass
@@ -17,13 +18,24 @@ class Task:
     priority: int
     category: str
     is_complete: bool = False
+    recurrence: str = "none"  # "none" | "daily" | "weekly"
+    due_date: date | None = None  # when this occurrence is due
 
     def update_details(self, details: dict) -> None:
         """Update one or more task details from a {field: value} mapping.
 
         Raises ValueError if a key does not match a Task field.
         """
-        allowed = {"name", "duration", "time", "priority", "category", "is_complete"}
+        allowed = {
+            "name",
+            "duration",
+            "time",
+            "priority",
+            "category",
+            "is_complete",
+            "recurrence",
+            "due_date",
+        }
         for key, value in details.items():
             if key not in allowed:
                 raise ValueError(f"Unknown task field: '{key}'")
@@ -32,6 +44,26 @@ class Task:
     def mark_complete(self) -> None:
         """Mark this task as complete."""
         self.is_complete = True
+
+    def next_occurrence(self) -> "Task | None":
+        """Return a fresh, incomplete copy of this task due on the next date.
+
+        Returns None if the task does not recur (or has no due date). The new
+        due date is computed with timedelta, so month/year/leap-year rollovers
+        are handled correctly (e.g. Jan 31 + 1 day -> Feb 1).
+        """
+        steps = {"daily": timedelta(days=1), "weekly": timedelta(weeks=1)}
+        if self.recurrence not in steps or self.due_date is None:
+            return None
+        return Task(
+            name=self.name,
+            duration=self.duration,
+            time=self.time,
+            priority=self.priority,
+            category=self.category,
+            recurrence=self.recurrence,
+            due_date=self.due_date + steps[self.recurrence],
+        )
 
 
 @dataclass
@@ -74,6 +106,17 @@ class Pet:
                 del self.tasks[i]
                 return
         raise ValueError(f"No task named '{task.name}' found.")
+
+    def complete_task(self, task: Task) -> Task | None:
+        """Mark `task` complete and add its next occurrence if it recurs.
+
+        Returns the newly created task, or None if the task does not repeat.
+        """
+        task.mark_complete()
+        next_task = task.next_occurrence()
+        if next_task is not None:
+            self.tasks.append(next_task)
+        return next_task
 
     def view_tasks(self) -> list[Task]:
         """Return all tasks for this pet."""
@@ -171,6 +214,47 @@ class Scheduler:
     def organize_by_priority(self, tasks: list[Task]) -> list[Task]:
         """Return tasks sorted by priority (lower number = higher priority)."""
         return sorted(tasks, key=lambda task: task.priority)
+
+    def sort_by_time(self, tasks: list[Task]) -> list[Task]:
+        """Return tasks sorted by their 'HH:MM' time attribute.
+
+        Zero-padded 24-hour times sort chronologically as plain strings,
+        so the lambda keys directly on task.time.
+        """
+        return sorted(tasks, key=lambda task: task.time)
+
+    def filter_by_pet(self, tasks: list[Task], pet_name: str) -> list[Task]:
+        """Return only the tasks that belong to the pet named `pet_name`.
+
+        Uses self.pet_by_task (id(task) -> pet name) to decide ownership,
+        so each task must have been registered with the scheduler.
+        """
+        return [
+            task for task in tasks if self.pet_by_task.get(id(task)) == pet_name
+        ]
+
+    def detect_conflicts(self, tasks: list[Task] | None = None) -> list[str]:
+        """Return warning messages for tasks that share the same time slot.
+
+        Lightweight: groups tasks by their `time` value; any slot holding more
+        than one task is flagged (same pet or different pets). Returns an empty
+        list when there are no conflicts and never raises, so callers can show
+        warnings without interrupting scheduling.
+        """
+        tasks = self.tasks if tasks is None else tasks
+        by_time: dict[str, list[Task]] = {}
+        for task in tasks:
+            by_time.setdefault(task.time, []).append(task)
+
+        warnings: list[str] = []
+        for time_slot, clashing in sorted(by_time.items()):
+            if len(clashing) > 1:
+                who = ", ".join(
+                    f"{self.pet_by_task.get(id(t), '?')}'s {t.name}"
+                    for t in clashing
+                )
+                warnings.append(f"[!] Conflict at {time_slot}: {who}")
+        return warnings
 
     def filter_to_constraints(self, tasks: list[Task]) -> list[Task]:
         """Drop completed tasks and trim by duration to fit self.availability.
