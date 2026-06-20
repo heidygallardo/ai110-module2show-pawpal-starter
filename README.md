@@ -95,10 +95,12 @@ My confidence level is a 3/5 stars in the system's reliability based on the test
 
 Describe your app in numbered steps so a reader can follow along without watching a video:
 
-1. <!-- Describe this step -->
-2. <!-- Describe this step -->
-3. <!-- Describe this step -->
-4. <!-- Describe this step -->
-5. <!-- Add more steps as needed -->
+1. **Launch the app.** Run `streamlit run app.py`. The PawPal+ page opens with a short scenario and a "What you need to build" overview at the top.
+2. **Enter owner info.** In the **Owner** section, type the owner's name (defaults to "Jordan") and set **Time available today (minutes)** — this is the total time budget the scheduler is allowed to fill (defaults to 120).
+3. **Add a pet.** In **Add a Pet**, enter a name, pick a species (dog / cat / other) and age, then click **Add pet**. The pet appears in a "Current pets" table showing its species, age, and task count. Adding a pet with a duplicate name shows a warning instead.
+4. **Add tasks for a pet.** In **Add a Task**, choose which pet the task is for, then set a title, duration (minutes), priority (low / medium / high), time of day (morning / afternoon / evening / night), and category. Click **Add task**. Duplicate task names for the same pet are rejected with a warning.
+5. **Review and explore the task list.** Under **Current tasks**, use **Filter by pet** to narrow the list to one pet and **Sort by** to order it by priority or by time of day. A caption shows how many of the total tasks are currently displayed.
+6. **Watch for conflict warnings.** Below the table, PawPal+ flags any tasks scheduled in the same time slot (for the same pet *or* across pets, since the owner can only be in one place at once). If nothing clashes, it confirms there are no conflicts.
+7. **Generate the daily schedule.** In **Build Schedule**, click **Generate schedule**. The scheduler sorts every task across all pets by priority and greedily fits them into the available-minutes budget.
+8. **Read the plan.** The result shows how many tasks were scheduled and how many minutes were used, a daily-agenda table ordered by time of day (then priority), a list of any tasks left out (over budget or already complete), and a final conflict check on the chosen plan.
 
-**Screenshot or video** *(optional)*: <!-- Insert a screenshot or link to a demo video here -->

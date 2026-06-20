@@ -1,0 +1,64 @@
+classDiagram
+    class Owner {
+        -String name
+        -String phoneNumber
+        -int availability
+        -Map preferences
+        -List~Pet~ pets
+        +addPet(pet) void
+        +editPet(pet) void
+        +removePet(pet) void
+        +viewPets() List~Pet~
+        +viewAllTasks() List~Task~
+    }
+
+    class Pet {
+        -String name
+        -String species
+        -int age
+        -List~String~ medicalConditions
+        -List~Task~ tasks
+        +addTask(task) void
+        +editTask(task) void
+        +removeTask(task) void
+        +completeTask(task) Task
+        +viewTasks() List~Task~
+    }
+
+    class Task {
+        -String name
+        -int duration
+        -String time
+        -int priority
+        -String category
+        -boolean isComplete
+        -String recurrence
+        -Date dueDate
+        +updateDetails(details) void
+        +markComplete() void
+        +nextOccurrence() Task
+    }
+
+    class Scheduler {
+        -List~Task~ tasks
+        -int availability
+        -Map preferences
+        -Map petByTask
+        -List~Task~ plan
+        -String explanation
+        +generatePlan() List~Task~
+        +organizeByPriority(tasks) List~Task~
+        +sortByTime(tasks) List~Task~
+        +filterByPet(tasks, petName) List~Task~
+        +detectConflicts(tasks) List~String~
+        +filterToConstraints(tasks) List~Task~
+        +explainPlan() String
+    }
+
+    Owner "1" *-- "0..*" Pet : owns
+    Pet "1" *-- "0..*" Task : has
+    Scheduler "1" o-- "0..*" Task : schedules
+    Pet ..> Task : creates via completeTask
+    Task ..> Task : creates next occurrence
+
+    note for Scheduler "Links tasks back to pets via petByTask map (id(task) -> pet name), not a direct reference."

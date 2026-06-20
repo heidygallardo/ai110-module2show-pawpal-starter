@@ -36,9 +36,6 @@ classes included:
 
 **b. Design changes**
 
-- Did your design change during implementation?
-- If yes, describe at least one change and why you made it.
-
 - Updated the Scheduler class, since the AI-generate UML diagram had added another class. 
 - Updated data type for 'availability' to integer.
 
@@ -48,8 +45,7 @@ classes included:
 
 **a. Constraints and priorities**
 
-- What constraints does your scheduler consider (for example: time, priority, preferences)?
-- How did you decide which constraints mattered most?
+- My scheduler considers time, priority, and any conflicts there might be.
 
 **b. Tradeoffs**
 
@@ -62,13 +58,15 @@ classes included:
 
 **a. How you used AI**
 
-- How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
-- What kinds of prompts or questions were most helpful?
+- I used AI to help brainstorm ideas as to what features the app should have.
+- I also used AI to help draft tests, once I received the draft I would review and trace through the logic to ensure the test was valid.
+- I found Claude's plan mode to be very helpful when brainstorming, as well as its "Ask before edits" mode this way I was able to review its plan and edits before accepting changes.
+- I also found it helpful to start a separate chat with Claude when working on a different section of the app.
 
 **b. Judgment and verification**
 
-- Describe one moment where you did not accept an AI suggestion as-is.
-- How did you evaluate or verify what the AI suggested?
+- One moment where I did not accept an AI suggestion as-is was when designing the UML diagram, since it was trying to add another class that was not needed.
+- I verified this by looking at the mermaid.js code the AI had given me.
 
 ---
 
@@ -76,13 +74,25 @@ classes included:
 
 **a. What you tested**
 
-- What behaviors did you test?
-- Why were these tests important?
+- Adding a task to a pet increases the pet's task count.
+- New tasks start with an incomplete status.
+- Marking a task as complete udpates its completion status.
+- Tasks can be sorted into chronological order by time.
+- Sorting tasks does not modify the original task list.
+- Completing a daily recurring task creates a new task for the next day.
+- Recurring tasks are created with an incomplete status.
+- Scheduler detects conflicts when multiple tasks share the same time slot.
+- Scheduler does not report conflicts for tasks with unique time slots.
 
 **b. Confidence**
 
-- How confident are you that your scheduler works correctly?
-- What edge cases would you test next if you had more time?
+- I am confident that the scheduler works for the main expected behaviors.
+- If I had more time I would test edge cases such as:
+
+    - an empty task list
+    - one task only
+    - invalid or missing times
+    -  availability limits when total task duration is too long
 
 ---
 
@@ -90,12 +100,12 @@ classes included:
 
 **a. What went well**
 
-- What part of this project are you most satisfied with?
+- The part I am most satisfied about this project is the filtering logic to be able to sort by pet, as well as my final UML diagram reflecting the structure of my app.
 
 **b. What you would improve**
 
-- If you had another iteration, what would you improve or redesign?
+- I would add more tests to improve the reliability of my app, as well as updating my UI so that it is more user-friendly. 
 
 **c. Key takeaway**
 
-- What is one important thing you learned about designing systems or working with AI on this project?
+- One important thing I learned about designing systems is to be specific on what classes the system should include as well as their attributes and methods. This way AI does not add any extra classes. 

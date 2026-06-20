@@ -3,6 +3,40 @@ from pawpal_system import Owner, Pet, Task, Scheduler
 
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="centered")
 
+# --- Pink theme -------------------------------------------------------------
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background: linear-gradient(160deg, #fff0f6 0%, #ffe3ef 100%);
+    }
+    h1, h2, h3, h4 { color: #c2185b !important; }
+    /* Primary buttons */
+    .stButton > button {
+        background-color: #ec407a;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+    }
+    .stButton > button:hover {
+        background-color: #d81b60;
+        color: white;
+    }
+    /* Tables */
+    table { border-radius: 8px; overflow: hidden; }
+    thead tr th { background-color: #f8bbd0 !important; color: #880e4f !important; }
+    tbody tr:nth-child(even) { background-color: #fff5f9 !important; }
+    /* Inputs and dividers */
+    hr { border-color: #f48fb1 !important; }
+    .stTextInput input, .stNumberInput input, .stSelectbox div[data-baseweb="select"] {
+        border-color: #f48fb1 !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 st.title("🐾 PawPal+")
 
 st.markdown(
@@ -135,21 +169,66 @@ else:
 
 all_tasks = owner.view_all_tasks()
 if all_tasks:
-    st.write("Current tasks:")
-    pet_of = {id(t): p.name for p in owner.pets for t in p.tasks}
-    st.table(
-        [
-            {
-                "pet": pet_of.get(id(t), "?"),
-                "task": t.name,
-                "duration": t.duration,
-                "time": t.time,
-                "priority": PRIORITY_LABELS.get(t.priority, t.priority),
-                "category": t.category,
-            }
-            for t in all_tasks
-        ]
+    st.write("### Current tasks")
+
+    # A scheduler instance lets us reuse the backend's sort/filter/conflict logic
+    # purely for display (no plan is generated here).
+    pet_by_task = {id(t): p.name for p in owner.pets for t in p.tasks}
+    view = Scheduler(
+        tasks=all_tasks,
+        availability=owner.availability,
+        preferences=owner.preferences,
+        pet_by_task=pet_by_task,
     )
+
+    fcol, scol = st.columns(2)
+    with fcol:
+        pet_filter = st.selectbox(
+            "Filter by pet", ["All pets"] + [p.name for p in owner.pets]
+        )
+    with scol:
+        sort_by = st.selectbox("Sort by", ["priority", "time of day"])
+
+    # Apply the chosen pet filter, then the chosen ordering.
+    shown = (
+        view.tasks
+        if pet_filter == "All pets"
+        else view.filter_by_pet(view.tasks, pet_filter)
+    )
+    shown = (
+        view.organize_by_priority(shown)
+        if sort_by == "priority"
+        else view.sort_by_time(shown)
+    )
+
+    if shown:
+        st.table(
+            [
+                {
+                    "pet": pet_by_task.get(id(t), "?"),
+                    "task": t.name,
+                    "duration (min)": t.duration,
+                    "time": t.time,
+                    "priority": PRIORITY_LABELS.get(t.priority, t.priority),
+                    "category": t.category,
+                    "done": "✅" if t.is_complete else "",
+                }
+                for t in shown
+            ]
+        )
+        st.caption(
+            f"Showing {len(shown)} of {len(all_tasks)} task(s)"
+            + ("" if pet_filter == "All pets" else f" for {pet_filter}")
+        )
+    else:
+        st.info(f"No tasks for {pet_filter} yet.")
+
+    # Surface scheduling conflicts (same time slot) before a plan is even built.
+    conflicts = view.detect_conflicts(shown)
+    if conflicts:
+        st.warning("Possible scheduling conflicts:\n\n" + "\n\n".join(conflicts))
+    else:
+        st.success("No time-slot conflicts in the current view.")
 else:
     st.info("No tasks yet.")
 
@@ -172,5 +251,54 @@ if st.button("Generate schedule"):
             preferences=owner.preferences,
             pet_by_task=pet_by_task,
         )
-        scheduler.generate_plan()
-        st.text(scheduler.explanation)
+        plan = scheduler.generate_plan()
+
+        if not plan:
+            st.warning("No tasks could be scheduled within the available time.")
+        else:
+            used = sum(t.duration for t in plan)
+            st.success(
+                f"Scheduled {len(plan)} task(s) using {used} of "
+                f"{owner.availability} available minutes."
+            )
+
+            # Order the plan by time of day so the table reads like a daily agenda.
+            time_order = ["morning", "afternoon", "evening", "night"]
+            ordered = sorted(
+                plan,
+                key=lambda t: (
+                    time_order.index(t.time)
+                    if t.time in time_order
+                    else len(time_order),
+                    t.priority,
+                ),
+            )
+            st.table(
+                [
+                    {
+                        "time": t.time,
+                        "pet": pet_by_task.get(id(t), "?"),
+                        "task": t.name,
+                        "duration (min)": t.duration,
+                        "priority": PRIORITY_LABELS.get(t.priority, t.priority),
+                        "category": t.category,
+                    }
+                    for t in ordered
+                ]
+            )
+
+            # Tasks that didn't make the cut, so the demo shows what was trimmed.
+            scheduled_ids = {id(t) for t in plan}
+            skipped = [t for t in tasks if id(t) not in scheduled_ids]
+            if skipped:
+                st.warning(
+                    "Left out (over time budget or already complete): "
+                    + ", ".join(t.name for t in skipped)
+                )
+
+            # Flag any same-time-slot conflicts within the final plan.
+            conflicts = scheduler.detect_conflicts(plan)
+            if conflicts:
+                st.warning(
+                    "Conflicts in the plan:\n\n" + "\n\n".join(conflicts)
+                )
