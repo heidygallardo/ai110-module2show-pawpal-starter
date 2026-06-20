@@ -57,19 +57,30 @@ Paste a sample of your app's CLI or Streamlit output here so a reader can see wh
 
 ## 🧪 Testing PawPal+
 
+Run the test suite from the project root:
+
 ```bash
 # Run the full test suite:
-pytest
+python -m pytest
 
 # Run with coverage:
-pytest --cov
+python -m pytest --cov
 ```
 
-Sample test output:
+The tests live in [tests/test_pawpal.py](tests/test_pawpal.py) and cover the core scheduling behaviors:
 
-```
-# Paste your pytest output here
-```
+| Test | What it verifies |
+|------|------------------|
+| `test_add_task_increases_pet_task_count` | Adding a task to a `Pet` grows its task list by one. |
+| `test_mark_complete_changes_status` | `Task.mark_complete()` flips a task's status from incomplete to complete. |
+| `test_sort_by_time_returns_chronological_order` | `Scheduler.sort_by_time()` returns tasks earliest-to-latest and does not mutate the original list. |
+| `test_completing_daily_task_creates_task_for_next_day` | Completing a `daily` recurring task marks it done and appends a fresh, incomplete occurrence for the next day. |
+| `test_detect_conflicts_flags_duplicate_times` | `Scheduler.detect_conflicts()` raises one warning per contested time slot, naming the time and clashing tasks. |
+| `test_detect_conflicts_returns_empty_when_all_times_unique` | `detect_conflicts()` returns an empty list when no tasks share a time slot. |
+
+![successful test run output](image-1.png)
+
+My confidence level is a 3/5 stars in the system's reliability based on the test results, mainly because there is still other functionality that must be tested.
 
 ## 📐 Smarter Scheduling
 
